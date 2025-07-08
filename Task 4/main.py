@@ -13,6 +13,7 @@ img_files.sort(key=lambda x: int(os.path.splitext(x
 print('Loading model...')
 model = YOLO('yolo11n.pt')
 print('model loaded.')
+print("Model classes:", model.names)
 transform = transforms.Compose([
     transforms.ToTensor(),
 ])
