@@ -1,23 +1,32 @@
 import torch
 from PIL import Image
+from ultralytics import YOLO
 import torchvision.transforms as transforms
 import os
 
-img_directory = f"{os.curdir}/Task 4/Chess_dataset/"
-img_files = [f for f in os.listdir(img_directory)]
+img_directory = os.path.join(os.curdir,"Chess_dataset")
+img_files = [f for f in os.listdir(img_directory)if f.endswith('.jpg')]
 img_files.sort(key=lambda x: int(os.path.splitext(x
 .replace('.jpg', '')
 .replace('(', '')
 .replace(')', ''))[0]))
 print('Loading model...')
-model = torch.load('/yolo11n.pt', 'yolo11n')
+model = YOLO('yolo11n.pt')
 print('model loaded.')
 transform = transforms.Compose([
-    transforms.Resize((640, 640)),
     transforms.ToTensor(),
 ])
 for image in img_files:
     file = os.path.join(img_directory, image)
     img = Image.open(file).convert('RGB')
-    img_transformed = transform(img).unsqueeze(0)
-    results = model(img_transformed)
+
+    results = model(img, imgsz=640)
+    for r in results:
+        boxes = r.boxes
+        for box in boxes:
+            cls = int(box.cls.item())  # Class index
+            conf = float(box.conf.item())  # Confidence
+            xyxy = box.xyxy[0].tolist()  # Bounding box
+
+            class_names = ['pawn', 'knight', 'bishop', 'rook', 'queen', 'king']
+            print(f"Image: {image} | Class: {class_names[cls]} | Confidence: {conf:.2f} | Box: {xyxy}")
